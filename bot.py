@@ -1,32 +1,39 @@
 import telebot
-from telebot.types import ReplyKeyboardMarkup, KeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import os
 
-# ទាញយក Token ដោយសុវត្ថិភាពពី Environment Variables របស់ Railway
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
-bot = telebot.TeleBot(BOT_TOKEN)
+# ទាញយក Token ពី Environment Variable (ងាយស្រួលពេលដាក់លើ Railway)
+TOKEN = os.getenv('BOT_TOKEN', 'សូមដាក់_TOKEN_របស់អ្នកនៅទីនេះ')
+bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    # បង្កើតប៊ូតុង (Keyboard) តាមដែលអ្នកបានស្នើសុំ
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = KeyboardButton("🛍️ ហាងទំនិញ")
-    btn2 = KeyboardButton("»  Tik Tok Kh 🇰🇭")
-    markup.add(btn1, btn2)
+    # បង្កើត Button (2 column)
+    markup = InlineKeyboardMarkup(row_width=2)
+    btn1 = InlineKeyboardButton("👨🏻‍💻 គណនី", callback_data='account')
+    btn2 = InlineKeyboardButton("🛍️ ហាងសេវា", callback_data='store')
+    btn3 = InlineKeyboardButton("💸 ដាក់ប្រាក់", callback_data='deposit')
+    # Link ទៅកាន់អ្នកគ្រប់គ្រងដោយផ្ទាល់
+    btn4 = InlineKeyboardButton("💬 អ្នកគ្រប់គ្រង", url='https://t.me/Dumyy_ji2') 
     
-    welcome_text = "សួស្តី! សូមជ្រើសរើសជម្រើសខាងក្រោម៖"
-    bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
+    markup.add(btn1, btn2, btn3, btn4)
+    
+    text = (
+        "សួរស្ដី! សូមស្វាគមន៌មកកាន់ Toad Store 24/7\n"
+        "សូមជ្រើសរើសសេវាកម្មខាងក្រោម"
+    )
+    bot.send_message(message.chat.id, text, reply_markup=markup)
 
-@bot.message_handler(func=lambda message: True)
-def handle_buttons(message):
-    # កំណត់ការឆ្លើយតបនៅពេលគេចុចលើប៊ូតុងនីមួយៗ
-    if message.text == "🛍️ ហាងទំនិញ":
-        bot.reply_to(message, "សូមស្វាគមន៍មកកាន់ហាងទំនិញរបស់យើង! 🛒")
-    elif message.text == "»  Tik Tok Kh 🇰🇭":
-        bot.reply_to(message, "សូមទស្សនាវីដេអូនៅលើ Tik Tok របស់យើងទីនេះ៖ [ដាក់លីងរបស់អ្នកនៅទីនេះ]")
-    else:
-        bot.reply_to(message, "ខ្ញុំមិនយល់ទេ សូមប្រើប្រាស់ប៊ូតុងខាងក្រោម។")
+# ចាប់យកសកម្មភាពពេលគេចុចលើ Button
+@bot.callback_query_handler(func=lambda call: True)
+def callback_query(call):
+    if call.data == 'store':
+        # ផ្ញើសារប្រាប់ពេលចុច ហាងសេវា
+        bot.send_message(call.message.chat.id, "ប្រព័ន្ធកំពុង Update service .")
+    elif call.data == 'account':
+        bot.answer_callback_query(call.id, "កំពុងរៀបចំ...")
+    elif call.data == 'deposit':
+        bot.answer_callback_query(call.id, "កំពុងរៀបចំ...")
 
-if __name__ == "__main__":
-    print("Bot កំពុងដំណើរការ...")
-    bot.infinity_polling()
+print("Bot កំពុងដំណើរការ...")
+bot.infinity_polling()
